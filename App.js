@@ -20,7 +20,7 @@ export default function App() {
       >
         <Stack.Screen name="Giriş" component={LoginScreen} />
         <Stack.Screen name="Kayıt" component={RegisterScreen} />
-        <Stack.Screen name='Ana Sayfa' component={HomeScreen}/>
+        <Stack.Screen name="Ana Sayfa" component={HomeScreen}/>
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import axios from "axios";
 
-const API_URL = "http://172.20.10.3:3000"; // Backend URL
+const API_URL = "http://192.168.1.21:3000"; // Backend URL
 
 const RegisterScreen = ({ navigation }) => {
   const [fullName, setFullName] = useState("");
@@ -62,7 +62,7 @@ const RegisterScreen = ({ navigation }) => {
       navigation.navigate("Giriş");
     } catch (err) {
       console.error(err);
-      if (err.response && err.response.data.message) {
+      if (err.response?.data?.message) {
         Alert.alert("Hata", err.response.data.message);
       } else {
         Alert.alert("Hata", "Kayıt sırasında bir hata oluştu.");
@@ -78,75 +78,121 @@ const RegisterScreen = ({ navigation }) => {
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.content}>
-            <Text style={styles.headerTitle}>Hesap Oluştur</Text>
+            {/* Header */}
+            <View style={styles.headerContainer}>
+              <TouchableOpacity 
+                style={styles.backButton}
+                onPress={() => navigation.goBack()}
+              >
+                <Text style={styles.backButtonText}>← Geri</Text>
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>Hesap Oluştur</Text>
+            </View>
 
+            {/* Form */}
             <View style={styles.formContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="Ad Soyad"
-                value={fullName}
-                onChangeText={setFullName}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Şifre"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Doğum Tarihi GG/AA/YYYY"
-                value={birthDate}
-                onChangeText={handleBirthDateChange}
-                keyboardType="numeric"
-                maxLength={10}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Telefon Numarası"
-                value={phoneNumber}
-                onChangeText={handlePhoneChange}
-                keyboardType="phone-pad"
-                maxLength={14}
-              />
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Ad Soyad</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Adınızı ve soyadınızı girin"
+                  placeholderTextColor="#999"
+                  value={fullName}
+                  onChangeText={setFullName}
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                />
+              </View>
 
-              <View style={styles.userTypeContainer}>
-                {["Hakem", "Yönetici"].map((type) => (
-                  <TouchableOpacity
-                    key={type}
-                    style={[
-                      styles.userTypeButton,
-                      userType === type && styles.userTypeButtonActive,
-                    ]}
-                    onPress={() => setUserType(type)}
-                  >
-                    <Text
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Email</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="E-posta adresinizi girin"
+                  placeholderTextColor="#999"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Şifre</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Şifrenizi girin"
+                  placeholderTextColor="#999"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Doğum Tarihi</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="GG/AA/YYYY"
+                  placeholderTextColor="#999"
+                  value={birthDate}
+                  onChangeText={handleBirthDateChange}
+                  keyboardType="numeric"
+                  maxLength={10}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Telefon Numarası</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="0555 123 45 67"
+                  placeholderTextColor="#999"
+                  value={phoneNumber}
+                  onChangeText={handlePhoneChange}
+                  keyboardType="phone-pad"
+                  maxLength={14}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Kullanıcı Tipi</Text>
+                <View style={styles.userTypeContainer}>
+                  {["Hakem", "Yönetici"].map((type) => (
+                    <TouchableOpacity
+                      key={type}
                       style={[
-                        styles.userTypeButtonText,
-                        userType === type && styles.userTypeButtonTextActive,
+                        styles.userTypeButton,
+                        userType === type && styles.userTypeButtonActive
                       ]}
+                      onPress={() => setUserType(type)}
                     >
-                      {type}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                      <Text
+                        style={[
+                          styles.userTypeButtonText,
+                          userType === type && styles.userTypeButtonTextActive
+                        ]}
+                      >
+                        {type}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
 
               <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
-                <Text style={styles.registerButtonText}>Kayıt Ol</Text>
+                <Text style={styles.registerButtonText}>Hesap Oluştur</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity onPress={() => navigation.navigate("Giriş")}>
-                <Text style={styles.loginLink}>Zaten hesabınız var? Giriş Yap</Text>
-              </TouchableOpacity>
+              <View style={styles.loginLinkContainer}>
+                <Text style={styles.loginLinkText}>Zaten hesabınız var mı? </Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Giriş')}>
+                  <Text style={styles.loginLink}>Giriş Yap</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </ScrollView>
@@ -156,45 +202,55 @@ const RegisterScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+  container: { flex: 1, backgroundColor: '#fff' },
   keyboardAvoidingView: { flex: 1 },
   scrollContent: { flexGrow: 1 },
-  content: { flex: 1, padding: 20 },
-  headerTitle: { fontSize: 28, fontWeight: "bold", marginBottom: 20, textAlign: "center" },
-  formContainer: { width: "100%" },
+  content: { flex: 1, paddingHorizontal: 24, paddingTop: 20 },
+  headerContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 32 },
+  backButton: { marginRight: 16 },
+  backButtonText: { fontSize: 16, color: '#007AFF', fontWeight: '500' },
+  headerTitle: { fontSize: 24, fontWeight: '600', color: '#333' },
+  formContainer: { width: '100%' },
+  inputContainer: { marginBottom: 20 },
+  inputLabel: { fontSize: 16, fontWeight: '500', color: '#333', marginBottom: 8 },
   input: {
-    height: 50,
+    height: 56,
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    marginBottom: 12,
-    paddingHorizontal: 12,
+    borderColor: '#E1E5E9',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    backgroundColor: '#F8F9FA',
+    color: '#333',
   },
-  userTypeContainer: { flexDirection: "row", marginBottom: 12 },
+  userTypeContainer: { flexDirection: 'row' },
   userTypeButton: {
     flex: 1,
-    height: 40,
+    height: 56,
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
+    borderColor: '#E1E5E9',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F8F9FA',
     marginRight: 6,
-    backgroundColor: "#f0f0f0",
   },
-  userTypeButtonActive: { backgroundColor: "#007AFF", borderColor: "#007AFF" },
-  userTypeButtonText: { color: "#333" },
-  userTypeButtonTextActive: { color: "#fff" },
+  userTypeButtonActive: { backgroundColor: '#007AFF', borderColor: '#007AFF' },
+  userTypeButtonText: { fontSize: 16, fontWeight: '500', color: '#666' },
+  userTypeButtonTextActive: { color: '#fff' },
   registerButton: {
-    height: 50,
-    backgroundColor: "#007AFF",
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 12,
+    height: 56,
+    backgroundColor: '#007AFF',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 24,
   },
-  registerButtonText: { color: "#fff", fontWeight: "600", fontSize: 16 },
-  loginLink: { color: "#007AFF", textAlign: "center", marginTop: 12 },
+  registerButtonText: { fontSize: 18, fontWeight: '600', color: '#fff' },
+  loginLinkContainer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
+  loginLinkText: { fontSize: 16, color: '#666' },
+  loginLink: { fontSize: 16, fontWeight: '600', color: '#007AFF' },
 });
 
 export default RegisterScreen;

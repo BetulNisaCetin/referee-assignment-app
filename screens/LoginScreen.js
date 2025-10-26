@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import axios from "axios";
 
-const API_URL = "http://172.20.10.3:3000"; // Backend URL, portu ekledik
+const API_URL = "http://192.168.1.21:3000"; // Backend URL, portu ekledik
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -33,7 +33,7 @@ const LoginScreen = ({ navigation }) => {
   } catch (err) {
     console.error(err);
     if (err.response && err.response.data.message) {
-      Alert.alert("Hata", err.response.data.message);
+      Alert.alert("Hata", err.resrponse.data.message);
     } else {
       Alert.alert("Hata", "Giriş sırasında bir hata oluştu.");
     }
