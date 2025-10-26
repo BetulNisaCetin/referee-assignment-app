@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,37 +8,44 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context'; // ✅ SafeAreaView değişti
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import axios from "axios";
+
+const API_URL = "http://172.20.10.3:3000"; // Backend URL, portu ekledik
 
 const LoginScreen = ({ navigation }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleLogin = () => {
-    if(email === '' || password === ''){
-      alert ('lütfen giriş yapınız');
+  const handleLogin = async () => {
+  console.log("Giriş verileri:", { email, password });
+  if (!email || !password) {
+    Alert.alert("Hata", "Lütfen e-posta ve şifreyi girin.");
+    return;
+  }
 
+  try {
+    const res = await axios.post(`${API_URL}/login`, { email, password });
+    console.log("Backend cevabı:", res.data);
+    Alert.alert("Başarılı", "Giriş yapıldı!");
+    navigation.navigate("Ana Sayfa");
+  } catch (err) {
+    console.error(err);
+    if (err.response && err.response.data.message) {
+      Alert.alert("Hata", err.response.data.message);
+    } else {
+      Alert.alert("Hata", "Giriş sırasında bir hata oluştu.");
     }
-    else{
-      navigation.navigate ('Ana Sayfa');
-
-    }
-  
-    
-  };
+  }
+};
 
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20} // opsiyonel
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardAvoidingView}
       >
-
-        
-
-     
         <View style={styles.content}>
           {/* Logo */}
           <View style={styles.logoContainer}>
@@ -58,12 +65,11 @@ const LoginScreen = ({ navigation }) => {
               <TextInput
                 style={styles.input}
                 placeholder="E-posta adresinizi girin"
-                placeholderTextColor="#999"
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                autoCorrect={false} // ✅ boolean olarak doğru
+                autoCorrect={false}
               />
             </View>
 
@@ -72,12 +78,11 @@ const LoginScreen = ({ navigation }) => {
               <TextInput
                 style={styles.input}
                 placeholder="Şifrenizi girin"
-                placeholderTextColor="#999"
                 value={password}
                 onChangeText={setPassword}
-                secureTextEntry={true} // ✅ boolean olarak doğru
+                secureTextEntry
                 autoCapitalize="none"
-                autoCorrect={false} // ✅ boolean olarak doğru
+                autoCorrect={false}
               />
             </View>
 
@@ -87,7 +92,7 @@ const LoginScreen = ({ navigation }) => {
 
             <View style={styles.registerLinkContainer}>
               <Text style={styles.registerLinkText}>Hesabınız yok mu? </Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Kayıt')}>
+              <TouchableOpacity onPress={() => navigation.navigate("Kayıt")}>
                 <Text style={styles.registerLink}>Kayıt Ol</Text>
               </TouchableOpacity>
             </View>
@@ -99,49 +104,49 @@ const LoginScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: "#fff" },
   keyboardAvoidingView: { flex: 1 },
-  content: { flex: 1, paddingHorizontal: 24, justifyContent: 'center' },
-  logoContainer: { alignItems: 'center', marginBottom: 48 },
+  content: { flex: 1, paddingHorizontal: 24, justifyContent: "center" },
+  logoContainer: { alignItems: "center", marginBottom: 48 },
   logoPlaceholder: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#007AFF',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#007AFF",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 16,
   },
-  logoText: { fontSize: 40, color: '#fff' },
-  appTitle: { fontSize: 28, fontWeight: 'bold', color: '#333', marginBottom: 4 },
-  appSubtitle: { fontSize: 16, color: '#666' },
-  formContainer: { width: '100%' },
-  formTitle: { fontSize: 24, fontWeight: '600', color: '#333', textAlign: 'center', marginBottom: 32 },
+  logoText: { fontSize: 40, color: "#fff" },
+  appTitle: { fontSize: 28, fontWeight: "bold", color: "#333", marginBottom: 4 },
+  appSubtitle: { fontSize: 16, color: "#666" },
+  formContainer: { width: "100%" },
+  formTitle: { fontSize: 24, fontWeight: "600", color: "#333", textAlign: "center", marginBottom: 32 },
   inputContainer: { marginBottom: 20 },
-  inputLabel: { fontSize: 16, fontWeight: '500', color: '#333', marginBottom: 8 },
+  inputLabel: { fontSize: 16, fontWeight: "500", color: "#333", marginBottom: 8 },
   input: {
     height: 56,
     borderWidth: 1,
-    borderColor: '#E1E5E9',
+    borderColor: "#E1E5E9",
     borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 16,
-    backgroundColor: '#F8F9FA',
-    color: '#333',
+    backgroundColor: "#F8F9FA",
+    color: "#333",
   },
   loginButton: {
     height: 56,
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF",
     borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 8,
     marginBottom: 24,
   },
-  loginButtonText: { fontSize: 18, fontWeight: '600', color: '#fff' },
-  registerLinkContainer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
-  registerLinkText: { fontSize: 16, color: '#666' },
-  registerLink: { fontSize: 16, fontWeight: '600', color: '#007AFF' },
+  loginButtonText: { fontSize: 18, fontWeight: "600", color: "#fff" },
+  registerLinkContainer: { flexDirection: "row", justifyContent: "center", alignItems: "center" },
+  registerLinkText: { fontSize: 16, color: "#666" },
+  registerLink: { fontSize: 16, fontWeight: "600", color: "#007AFF" },
 });
 
 export default LoginScreen;
