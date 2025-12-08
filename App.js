@@ -6,6 +6,7 @@ import LoginScreen from './screens/LoginScreen';
 import RegisterScreen from './screens/RegisterScreen';
 import HomeScreen from './screens/HomeScreen';
 
+
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -21,6 +22,7 @@ export default function App() {
         <Stack.Screen name="Giriş" component={LoginScreen} />
         <Stack.Screen name="Kayıt" component={RegisterScreen} />
         <Stack.Screen name="Ana Sayfa" component={HomeScreen}/>
+        
       </Stack.Navigator>
     </NavigationContainer>
   );

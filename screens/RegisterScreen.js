@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import axios from "axios";
 
-const API_URL = "http://192.168.1.21:3000"; // Backend URL
+const API_URL = "http://192.168.1.22:8081"; // Backend URL
 
 const RegisterScreen = ({ navigation }) => {
   const [fullName, setFullName] = useState("");
