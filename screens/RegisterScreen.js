@@ -9,11 +9,10 @@ import {
   Platform,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import axios from "axios";
-
-const API_URL = "http://192.168.1.21:3000"; // Backend URL
+import { authAPI } from "../api";
 
 const RegisterScreen = ({ navigation }) => {
   const [fullName, setFullName] = useState("");
@@ -22,6 +21,8 @@ const RegisterScreen = ({ navigation }) => {
   const [birthDate, setBirthDate] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [userType, setUserType] = useState("Hakem");
+  const [refereeType, setRefereeType] = useState("Başhakem");
+  const [loading, setLoading] = useState(false);
 
   const formatBirthDate = (text) => {
     const cleaned = text.replace(/\D/g, "");
@@ -49,15 +50,18 @@ const RegisterScreen = ({ navigation }) => {
       return;
     }
 
+    setLoading(true);
     try {
-      const res = await axios.post(`${API_URL}/register`, {
+      const res = await authAPI.register({
         name: fullName,
         email,
         password,
         birthDate,
         phone: phoneNumber,
         userType,
+        refereeType: userType === "Hakem" ? refereeType : null,
       });
+
       Alert.alert("Başarılı", "Kayıt tamamlandı!");
       navigation.navigate("Giriş");
     } catch (err) {
@@ -67,6 +71,8 @@ const RegisterScreen = ({ navigation }) => {
       } else {
         Alert.alert("Hata", "Kayıt sırasında bir hata oluştu.");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -78,7 +84,6 @@ const RegisterScreen = ({ navigation }) => {
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.content}>
-            {/* Header */}
             <View style={styles.headerContainer}>
               <TouchableOpacity 
                 style={styles.backButton}
@@ -89,7 +94,6 @@ const RegisterScreen = ({ navigation }) => {
               <Text style={styles.headerTitle}>Hesap Oluştur</Text>
             </View>
 
-            {/* Form */}
             <View style={styles.formContainer}>
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Ad Soyad</Text>
@@ -183,8 +187,39 @@ const RegisterScreen = ({ navigation }) => {
                 </View>
               </View>
 
-              <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
-                <Text style={styles.registerButtonText}>Hesap Oluştur</Text>
+              {userType === "Hakem" && (
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Hakem Türü</Text>
+                  <View style={styles.userTypeContainer}>
+                    {["Başhakem", "Yardımcı Hakem", "Çizgi Hakem"].map((type) => (
+                      <TouchableOpacity
+                        key={type}
+                        style={[
+                          styles.userTypeButton,
+                          refereeType === type && styles.userTypeButtonActive
+                        ]}
+                        onPress={() => setRefereeType(type)}
+                      >
+                        <Text
+                          style={[
+                            styles.userTypeButtonText,
+                            refereeType === type && styles.userTypeButtonTextActive
+                          ]}
+                        >
+                          {type}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              <TouchableOpacity style={styles.registerButton} onPress={handleRegister} disabled={loading}>
+                {loading ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles.registerButtonText}>Hesap Oluştur</Text>
+                )}
               </TouchableOpacity>
 
               <View style={styles.loginLinkContainer}>
@@ -194,6 +229,7 @@ const RegisterScreen = ({ navigation }) => {
                 </TouchableOpacity>
               </View>
             </View>
+
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

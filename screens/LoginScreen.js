@@ -8,37 +8,49 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import axios from "axios";
+import { authAPI } from "../api";
 
-const API_URL = "http://192.168.1.21:3000"; // Backend URL, portu ekledik
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-  console.log("Giriş verileri:", { email, password });
-  if (!email || !password) {
-    Alert.alert("Hata", "Lütfen e-posta ve şifreyi girin.");
-    return;
-  }
-
-  try {
-    const res = await axios.post(`${API_URL}/login`, { email, password });
-    console.log("Backend cevabı:", res.data);
-    Alert.alert("Başarılı", "Giriş yapıldı!");
-    navigation.navigate("Ana Sayfa");
-  } catch (err) {
-    console.error(err);
-    if (err.response && err.response.data.message) {
-      Alert.alert("Hata", err.resrponse.data.message);
-    } else {
-      Alert.alert("Hata", "Giriş sırasında bir hata oluştu.");
+    console.log("Giriş verileri:", { email, password });
+    if (!email || !password) {
+      Alert.alert("Hata", "Lütfen e-posta ve şifreyi girin.");
+      return;
     }
-  }
-};
+
+    setLoading(true);
+    try {
+      const res = await authAPI.login(email, password);
+      console.log("Backend cevabı:", res.data);
+      const userType = res.data.user?.userType;
+      
+      Alert.alert("Başarılı", "Giriş yapıldı!");
+      
+      // Kullanıcı tipi kontrol et - Yönetici ise Hakem Atama sayfasına git
+      if (userType === 'Yönetici') {
+        navigation.navigate("Hakem Atama");
+      } else {
+        navigation.navigate("Ana Sayfa");
+      }
+    } catch (err) {
+      console.error(err);
+      if (err.response?.data?.message) {
+        Alert.alert("Hata", err.response.data.message);
+      } else {
+        Alert.alert("Hata", "Giriş sırasında bir hata oluştu.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -86,8 +98,12 @@ const LoginScreen = ({ navigation }) => {
               />
             </View>
 
-            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-              <Text style={styles.loginButtonText}>Giriş Yap</Text>
+            <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={loading}>
+              {loading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text style={styles.loginButtonText}>Giriş Yap</Text>
+              )}
             </TouchableOpacity>
 
             <View style={styles.registerLinkContainer}>
