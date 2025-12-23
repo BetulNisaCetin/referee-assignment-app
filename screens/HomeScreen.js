@@ -1,4 +1,8 @@
-import { StyleSheet, Text, TouchableOpacity, View, StatusBar,FlatList } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View, StatusBar, FlatList } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { adminAPI, refereeApi } from '../api'; 
+import { Alert } from 'react-native';
+const DAYS = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
 
 const HomeScreen = ({navigation}) => {
     const today = new Date(); // güncel tarih
@@ -8,47 +12,69 @@ const HomeScreen = ({navigation}) => {
     minute: '2-digit',
     }); 
       
-    const matches = [
-      {
-        id: "1",
-        home: "Fenerbahçe",
-        away: "Eczacıbaşı",
-        date: "12.12.2025",
-        location: "Ankara Spor Salonu",
-        assigned: false,
-        importance: 1,
-      },
-      {
-        id: "2",
-        home: "VakıfBank",
-        away: "Galatasaray",
-        date: "13.12.2025",
-        location: "İstanbul Burhan Felek",
-        assigned: true,
-        importance: 3,
-      },
-      {
-        id: "3",
-        home: "Karayolları",
-        away: "PTT",
-        date: "14.12.2025",
-        location: "Başkent Voleybol Salonu",
-        assigned: false,
-        importance: 2,
-      },
-    ];
+    const [matches, setMatches] = useState([]);
+    const [referees, setReferees] = useState([]);
+    const [assigmentBtn, setAssigmentBtn] = useState(false);
+    const [assigment, setAssigment] = useState(false);
+    const [selectedDays, setSelectedDays] = useState([]); // Müsait olunmayan günler
+
+    const [role, setRole] = useState(null);
+    const [username, setUsername] = useState("");
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+      const fetchUserInfoAndMatches = async () => {
+        try {
+          const res = await adminAPI.getMatches();
+          setMatches(res.data);
+          console.log(res.data)
+          const referees = await refereeApi.getReferees();
+          setReferees(referees.data);
+          console.log(referees.data)
+
+        } catch(err) {
+          console.log('Maçlar alınırken hata oluştu:', err);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchUserInfoAndMatches();
+    }, []);
    const getImportanceLabel = (value) => {
-  if (value === 1) return { label: "Yüksek", color: "#d32f2f" };
-  if (value === 2) return { label: "Orta", color: "#f9a825" };
-  return { label: "Düşük", color: "#388e3c" };
+  if (value >= 7) {
+    return { label: "Yüksek", color: "#d32f2f" };
+  }else if(value >= 4) {
+    return { label: "Orta", color: "#f9a825" };
+  }else{
+    return { label: "Düşük", color: "#388e3c" };
+  }
+};
+const refereeAssigment = async() => {
+  const assigment = refereeApi.assignmentManuel()
+  setAssigment(true);
+
 };
 
+const getMatches = async () =>{
+  console.log("data çağırıldı")
+ const res = await adminAPI.getMatches();
+ setMatches(res.data);
+ setAssigment(false);
+}
+
+
+useEffect(() => {
+  getMatches();
+}, [assigment]);
+
 const renderMatch = ({ item }) => {
-  const importance = getImportanceLabel(item.importance);
+  item?.assignment === null ? setAssigmentBtn(true) : setAssigmentBtn(false)
+  
+  const importance = getImportanceLabel(item?.difficulty?.difficultyScore);
   return (
     <View style={styles.matchItem}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Text style={styles.matchTeams}>{item.home} - {item.away}</Text>
+        <Text style={styles.matchTeams}>{item.homeTeam} - {item.awayTeam}</Text>
         {/* Önem etiketi: küçük, renkli, yazılı */}
         <View style={[styles.importanceBadge, { backgroundColor: importance.color + '22' }]}> 
           <Text style={[styles.importanceText, { color: importance.color }]}>
@@ -56,23 +82,31 @@ const renderMatch = ({ item }) => {
           </Text>
         </View>
       </View>
-      <Text style={styles.matchDate}>Tarih: {item.date}</Text>
-      <Text style={styles.matchLocation}>Konum: {item.location}</Text>
+      <Text style={styles.matchDate}>Tarih: {item.matchDate}</Text>
+      <Text style={styles.matchLocation}>Konum: {item.venue}</Text>
       <Text style={styles.matchAssignment}>
-        {item.assigned ? "Hakem Atandı" : "Hakem Atanmadı"}
+        {item.assignment ? item?.assignment?.refereeName : "Hakem Atanmadı"}
       </Text>
-      <TouchableOpacity
-        style={styles.assignButtonMini}
-        onPress={() => {
-          alert(`${item.home} - ${item.away} için hakem ata işlemi!`)
-        }}
-      >
-        <Text style={styles.assignBtnTextMini}>Hakem Ata</Text>
-      </TouchableOpacity>
     </View>
   );
 };
 
+
+  const handleToggleDay = (day) => {
+    setSelectedDays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
+    );
+  };
+
+  const handleSubmitUnavailableDays = async () => {
+    try {
+      await api.post(`/referees/${username}/unavailables`, { days: selectedDays });
+      Alert.alert('Başarılı', 'Müsait olmadığınız günler kaydedildi!');
+    } catch (err) {
+      console.log('Müsait günler kaydedilemedi:', err);
+      Alert.alert('Hata', 'Müsait olmadığınız günler kaydedilemedi!');
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -87,8 +121,7 @@ const renderMatch = ({ item }) => {
           </Text>
         </View>
 
-        <TouchableOpacity style={styles.extButtonStyle} 
-         onPress={() => navigation.goBack()}  >
+        <TouchableOpacity style={styles.extButtonStyle} onPress={() => navigation.goBack()} >
         <Text style={styles.TextStyle}>Çıkış</Text>
         </TouchableOpacity>
         </View>
@@ -106,6 +139,7 @@ const renderMatch = ({ item }) => {
             onPress={() => {}}
           >
             <Text style={styles.boxTextStyles}>Atama Bekleyen</Text>
+            
           </TouchableOpacity>
 
           <TouchableOpacity 
@@ -127,12 +161,54 @@ const renderMatch = ({ item }) => {
          {/* 📌 FLATLIST — Atama Bekleyen Maçlar */}
       <Text style={styles.listTitle}>Atama Bekleyen Maçlar</Text>
 
+    
       <FlatList
         data={matches}
         keyExtractor={(item) => item.id}
         renderItem={renderMatch}
         style={{ marginHorizontal: 20, marginBottom: 30 }}
       />
+        {
+        assigmentBtn &&
+        <View style={{alignSelf:'center', justifyContent:'center',}}>
+        <TouchableOpacity
+        style={styles.assignButtonMini}
+        onPress={() => {
+          refereeAssigment(),
+          setAssigmentBtn(false)
+        }}
+        >
+          <Text style={styles.assignBtnTextMini}>Hakem Ata</Text>
+        </TouchableOpacity>
+        </View>
+        }
+
+      {/* Hakeme özel müsait olmadığı günler seçimi */}
+      {role === 'hakem' && (
+        <View style={{margin: 16, backgroundColor: '#fff', borderRadius: 12, padding: 12, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4 }}>
+          <Text style={{fontWeight: 'bold', color: '#007AFF', fontSize: 16, marginBottom: 8}}>Müsait Olmadığım Günler</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
+            {DAYS.map((day) => (
+              <TouchableOpacity
+                key={day}
+                onPress={() => handleToggleDay(day)}
+                style={{
+                  backgroundColor: selectedDays.includes(day) ? '#d32f2f' : '#e6e6e6',
+                  paddingHorizontal: 14,
+                  paddingVertical: 7,
+                  borderRadius: 16,
+                  margin: 5,
+                }}
+              >
+                <Text style={{ color: selectedDays.includes(day) ? 'white' : '#333', fontWeight: 'bold' }}>{day}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <TouchableOpacity onPress={handleSubmitUnavailableDays} style={{marginTop:14, alignSelf:'center', backgroundColor:'#007AFF', borderRadius:8, paddingHorizontal:20, paddingVertical:8}}>
+            <Text style={{color:'white', fontWeight:'bold'}}>Günleri Kaydet</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
     
   )
@@ -303,11 +379,11 @@ importanceText: {
 assignButtonMini: {
   backgroundColor: '#007AFF',
   alignItems: 'center',
-  paddingVertical: 4,
+  paddingVertical: 12,
   paddingHorizontal: 12,
   borderRadius: 6,
-  marginTop: 5,
   alignSelf: 'flex-end',
+  bottom: 20 
 },
 assignBtnTextMini: {
   color: 'white',

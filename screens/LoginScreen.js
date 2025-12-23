@@ -11,34 +11,39 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import axios from "axios";
-
-const API_URL = "http://192.168.1.22:8081"; // Backend URL, portu ekledik
+import * as SecureStore from "expo-secure-store";
+import { authAPI,adminAPI } from "../api";
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-  console.log("Giriş verileri:", { email, password });
-  if (!email || !password) {
-    Alert.alert("Hata", "Lütfen e-posta ve şifreyi girin.");
-    return;
-  }
-
-  try {
-    const res = await axios.post(`${API_URL}/login`, { email, password });
-    console.log("Backend cevabı:", res.data);
-    Alert.alert("Başarılı", "Giriş yapıldı!");
-    navigation.navigate("Ana Sayfa");
-  } catch (err) {
-    console.error(err);
-    if (err.response && err.response.data.message) {
-      Alert.alert("Hata", err.resrponse.data.message);
-    } else {
-      Alert.alert("Hata", "Giriş sırasında bir hata oluştu.");
+    if (!email || !password) {
+      Alert.alert("Hata", "Lütfen e-posta ve şifreyi girin.");
+      return;
     }
-  }
-};
+
+    try {
+      setLoading(true);
+      const res = await authAPI.login(email,password)
+
+      console.log("ress",res.data)
+      Alert.alert("Başarılı", "Giriş yapıldı!");
+      navigation.replace("Ana Sayfa");
+
+    } catch (err) {
+      console.log("LOGIN ERROR:", err.response?.data || err.message);
+
+      Alert.alert(
+        "Hata",
+        err.response?.data?.error || "Giriş başarısız"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -47,7 +52,6 @@ const LoginScreen = ({ navigation }) => {
         style={styles.keyboardAvoidingView}
       >
         <View style={styles.content}>
-          {/* Logo */}
           <View style={styles.logoContainer}>
             <View style={styles.logoPlaceholder}>
               <Text style={styles.logoText}>⚽</Text>
@@ -56,7 +60,6 @@ const LoginScreen = ({ navigation }) => {
             <Text style={styles.appSubtitle}>Görev Yönetimi</Text>
           </View>
 
-          {/* Form */}
           <View style={styles.formContainer}>
             <Text style={styles.formTitle}>Tekrar Hoş Geldiniz</Text>
 
@@ -64,12 +67,10 @@ const LoginScreen = ({ navigation }) => {
               <Text style={styles.inputLabel}>Email</Text>
               <TextInput
                 style={styles.input}
-                placeholder="E-posta adresinizi girin"
                 value={email}
                 onChangeText={setEmail}
-                keyboardType="email-address"
                 autoCapitalize="none"
-                autoCorrect={false}
+                keyboardType="email-address"
               />
             </View>
 
@@ -77,17 +78,20 @@ const LoginScreen = ({ navigation }) => {
               <Text style={styles.inputLabel}>Şifre</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Şifrenizi girin"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
               />
             </View>
 
-            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-              <Text style={styles.loginButtonText}>Giriş Yap</Text>
+            <TouchableOpacity
+              style={styles.loginButton}
+              onPress={handleLogin}
+              disabled={loading}
+            >
+              <Text style={styles.loginButtonText}>
+                {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
+              </Text>
             </TouchableOpacity>
 
             <View style={styles.registerLinkContainer}>
@@ -118,21 +122,24 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   logoText: { fontSize: 40, color: "#fff" },
-  appTitle: { fontSize: 28, fontWeight: "bold", color: "#333", marginBottom: 4 },
+  appTitle: { fontSize: 28, fontWeight: "bold", color: "#333" },
   appSubtitle: { fontSize: 16, color: "#666" },
   formContainer: { width: "100%" },
-  formTitle: { fontSize: 24, fontWeight: "600", color: "#333", textAlign: "center", marginBottom: 32 },
+  formTitle: {
+    fontSize: 24,
+    fontWeight: "600",
+    textAlign: "center",
+    marginBottom: 32,
+  },
   inputContainer: { marginBottom: 20 },
-  inputLabel: { fontSize: 16, fontWeight: "500", color: "#333", marginBottom: 8 },
+  inputLabel: { fontSize: 16, marginBottom: 8 },
   input: {
     height: 56,
     borderWidth: 1,
     borderColor: "#E1E5E9",
     borderRadius: 12,
     paddingHorizontal: 16,
-    fontSize: 16,
     backgroundColor: "#F8F9FA",
-    color: "#333",
   },
   loginButton: {
     height: 56,
@@ -140,11 +147,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 8,
     marginBottom: 24,
   },
-  loginButtonText: { fontSize: 18, fontWeight: "600", color: "#fff" },
-  registerLinkContainer: { flexDirection: "row", justifyContent: "center", alignItems: "center" },
+  loginButtonText: { fontSize: 18, color: "#fff" },
+  registerLinkContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+  },
   registerLinkText: { fontSize: 16, color: "#666" },
   registerLink: { fontSize: 16, fontWeight: "600", color: "#007AFF" },
 });

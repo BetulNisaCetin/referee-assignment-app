@@ -12,8 +12,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import axios from "axios";
+import { authAPI } from "../api";
 
-const API_URL = "http://192.168.1.22:8081"; // Backend URL
 
 const RegisterScreen = ({ navigation }) => {
   const [fullName, setFullName] = useState("");
@@ -50,14 +50,12 @@ const RegisterScreen = ({ navigation }) => {
     }
 
     try {
-      const res = await axios.post(`${API_URL}/register`, {
-        name: fullName,
+      const res = await authAPI.register({
         email,
         password,
-        birthDate,
-        phone: phoneNumber,
-        userType,
-      });
+        fullName,
+        email
+      })
       Alert.alert("Başarılı", "Kayıt tamamlandı!");
       navigation.navigate("Giriş");
     } catch (err) {
